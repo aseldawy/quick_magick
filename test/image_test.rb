@@ -1,8 +1,8 @@
 require 'test/unit'
-require 'quick_magick/image'
+require 'quick_magick'
 
 $base_dir = File.dirname(File.expand_path(__FILE__))
-puts $base_dir
+
 class ImageTest < Test::Unit::TestCase
   def test_open_existing_image
     image_filename = File.join($base_dir, "imagemagick-logo.png")
@@ -41,7 +41,15 @@ class ImageTest < Test::Unit::TestCase
     end
   end
   
-  def test_resize_a_file
+  def test_open_mulitpage_file
+    image_filename = File.join($base_dir, "multipage.tif")
+    i = QuickMagick::Image.read(image_filename)
+    assert_equal 2, i.size
+    assert_equal 100, i[0].width
+    assert_equal 464, i[1].width
+  end
+
+  def test_resize_image
     image_filename = File.join($base_dir, "imagemagick-logo.png")
     i = QuickMagick::Image.read(image_filename).first
     i.resize("300x300!")
@@ -52,15 +60,40 @@ class ImageTest < Test::Unit::TestCase
     i2 = QuickMagick::Image.read(output_filename).first
     assert_equal 300, i2.width
     assert_equal 300, i2.height
+  ensure
     # clean up
-    File.delete(output_filename)
+    File.delete(output_filename) if File.exists?(output_filename)
   end
   
-  def test_open_mulitpage_file
-    image_filename = File.join($base_dir, "multipage.tif")
-    i = QuickMagick::Image.read(image_filename)
-    assert_equal 2, i.size
-    assert_equal 100, i[0].width
-    assert_equal 464, i[1].width
+  def test_crop_image
+    image_filename = File.join($base_dir, "imagemagick-logo.png")
+    i = QuickMagick::Image.read(image_filename).first
+    i.crop("300x200+0+0")
+    output_filename = File.join($base_dir, "imagemagick-cropped.png")
+    File.delete output_filename if File.exists?(output_filename)
+    i.save(output_filename)
+    assert File.exists?(output_filename)
+    i2 = QuickMagick::Image.read(output_filename).first
+    assert_equal 300, i2.width
+    assert_equal 200, i2.height
+  ensure
+    # clean up
+    File.delete(output_filename) if File.exists?(output_filename)
+  end
+  
+  def test_resize_with_geometry_options
+    image_filename = File.join($base_dir, "imagemagick-logo.png")
+    i = QuickMagick::Image.read(image_filename).first
+    i.resize(300, 300, nil, nil, QuickMagick::AspectGeometry)
+    output_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete output_filename if File.exists?(output_filename)
+    i.save(output_filename)
+    assert File.exists?(output_filename)
+    i2 = QuickMagick::Image.read(output_filename).first
+    assert_equal 300, i2.width
+    assert_equal 300, i2.height
+  ensure
+    # clean up
+    File.delete(output_filename) if File.exists?(output_filename)
   end
 end

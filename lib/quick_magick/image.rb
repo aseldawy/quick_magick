@@ -1,19 +1,13 @@
 require "tempfile"
 
 module QuickMagick
-  class QuickMagickError < RuntimeError; end;
-    
+  
   class Image
     class <<self
-      # generate a random string of specified length
-      def random_string(length=10)
-        @@CHARS ||= ("a".."z").to_a + ("1".."9").to_a 
-        Array.new(length, '').collect{@@CHARS[rand(@@CHARS.size)]}.join
-      end
       
       # create an array of images from the given blob data
       def from_blob(blob)
-        file = Tempfile.new(random_string)
+        file = Tempfile.new(QuickMagick::random_string)
         file.write(blob)
         file.close
         self.read(file.path)
@@ -44,37 +38,69 @@ module QuickMagick
       def identify(filename)
         `identify "#{filename}"`
       end
+      
+      def retrieve_geometry(width, height=nil, x=nil, y=nil, flag=nil)
+        geometry_string = ""
+        geometry_string << width.to_s if width
+        geometry_string << 'x' << height.to_s if height
+        geometry_string << '+' << x.to_s if x
+        geometry_string << '+' << y.to_s if y
+        geometry_string << flag if flag
+        geometry_string
+      end
     end
     
     # append the given option, value pair to the args for the current image
     def append_to_args(arg, value="")
-      args << "-#{arg.to_s} #{value.to_s} "
+      args[arg] = value.to_s
     end
     
     # returns/creates the arguments for the current image
     def args
-      @args ||= ""
+      @args ||= { }
     end
     
-    # define methods to change options using option
-    %w{authenticate attenuate monitor orient regard-warnings remap
-       sampling-factor size stretch stroke style
-       chop colorize draw emboss enhance flip flop floodfill monochrome quantize resample resize
-       rotate sample scale sepia-tone shade shadow sharpen shave shear sketch solarize
-       splice spread strip thumbnail tint transform transpose transverse trim unique-colors
-       unsharp}.each do |method|
+    def arg_string
+      str = ""
+      args.each do |k, v|
+        str << "-#{k} #{v}"
+      end
+      str
+    end
+    
+    # define methods to change options using methods of form option(args)
+    OPTION_METHODS = 
+    %w{authenticate attenuate monitor orient regard-warnings remap stretch stroke style colorize
+      draw emboss enhance flip flop monochrome quantize rotate sepia-tone shade solarize spread
+      strip tint transform transpose transverse trim unique-colors}
+    OPTION_METHODS.each do |method|
       define_method(method.to_sym) do |*args|
-        append_to_args(method, args[0])
+        append_to_args(method, args.collect{|arg| %Q<"#{arg}">}.join)
       end
     end
 
-    # define methods to change options using option=
-    %w{alpha antialias background bias black-point-compensation blue-primary bordercolor caption
-       cahnnel colors colorspace comment compose compress density depth encoding endian family fill
-       filter font format fuzz gravity label mattecolor page pointsize quality undercolor units weight
-       border brodercolor frame geometry transparent type}.each do |method|
+    # define methods to change options using option=(args)
+    OPTION_EQUAL_METHODS =
+      %w{alpha antialias background bias black-point-compensation blue-primary border bordercolor caption
+        cahnnel colors colorspace comment compose compress depth density encoding endian family fill filter
+        font format frame fuzz geometry gravity label mattecolor page pointsize quality undercolor units weight
+        brodercolor transparent type}
+    OPTION_EQUAL_METHODS.each do |method|
       define_method((method+'=').to_sym) do |*args|
-        append_to_args(method, args[0])
+        append_to_args(method, args.collect{|arg| %Q<"#{arg}">}.join )
+      end
+    end
+    
+    # define methods that accepts a geometry parameter
+    OPTION_GEOMETRY_METHODS =
+      %w{density page sampling-factor size tile-offset adaptive-blur adaptive-resize adaptive-sharpen
+        annotate blur border chop contrast-stretch extent extract floodfill frame gaussian-blur
+        geometry lat linear-stretch liquid-rescale motion-blur region repage resample resize roll
+        sample scale selective-blur shadow sharpen shave shear sigmoidal-contrast sketch
+        splice thumbnail unsharp vignette wave crop}
+    OPTION_GEOMETRY_METHODS.each do |method|
+      define_method((method).to_sym) do |*args|
+        append_to_args(method, %Q<"#{QuickMagick::Image.retrieve_geometry(*args)}"> )
       end
     end
     
@@ -91,7 +117,7 @@ module QuickMagick
     
     # saves the current image to the given filename
     def save(output_filename)
-      `convert #{args} "#{image_filename}" "#{output_filename}"`
+      `convert #{arg_string} "#{image_filename}" "#{output_filename}"`
     end
     
     alias write save
@@ -99,7 +125,7 @@ module QuickMagick
     
     # saves the current image overwriting the original image file
     def save!
-      `mogrify #{args} "#{image_filename}"`
+      `mogrify #{arg_string} "#{image_filename}"`
     end
     
     alias write! save!
