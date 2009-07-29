@@ -53,47 +53,73 @@ class ImageTest < Test::Unit::TestCase
     image_filename = File.join($base_dir, "imagemagick-logo.png")
     i = QuickMagick::Image.read(image_filename).first
     i.resize("300x300!")
-    output_filename = File.join($base_dir, "imagemagick-resized.png")
-    File.delete output_filename if File.exists?(output_filename)
-    i.save(output_filename)
-    assert File.exists?(output_filename)
-    i2 = QuickMagick::Image.read(output_filename).first
+    out_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
     assert_equal 300, i2.width
     assert_equal 300, i2.height
   ensure
     # clean up
-    File.delete(output_filename) if File.exists?(output_filename)
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
   end
   
   def test_crop_image
     image_filename = File.join($base_dir, "imagemagick-logo.png")
     i = QuickMagick::Image.read(image_filename).first
     i.crop("300x200+0+0")
-    output_filename = File.join($base_dir, "imagemagick-cropped.png")
-    File.delete output_filename if File.exists?(output_filename)
-    i.save(output_filename)
-    assert File.exists?(output_filename)
-    i2 = QuickMagick::Image.read(output_filename).first
+    out_filename = File.join($base_dir, "imagemagick-cropped.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
     assert_equal 300, i2.width
     assert_equal 200, i2.height
   ensure
     # clean up
-    File.delete(output_filename) if File.exists?(output_filename)
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
   end
   
   def test_resize_with_geometry_options
     image_filename = File.join($base_dir, "imagemagick-logo.png")
     i = QuickMagick::Image.read(image_filename).first
     i.resize(300, 300, nil, nil, QuickMagick::AspectGeometry)
-    output_filename = File.join($base_dir, "imagemagick-resized.png")
-    File.delete output_filename if File.exists?(output_filename)
-    i.save(output_filename)
-    assert File.exists?(output_filename)
-    i2 = QuickMagick::Image.read(output_filename).first
+    out_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
     assert_equal 300, i2.width
     assert_equal 300, i2.height
   ensure
     # clean up
-    File.delete(output_filename) if File.exists?(output_filename)
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+  
+  def test_resize_with_append_to_operators
+    image_filename = File.join($base_dir, "imagemagick-logo.png")
+    i = QuickMagick::Image.read(image_filename).first
+    i.append_to_operators 'resize', '300x300!'
+    out_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
+    assert_equal 300, i2.width
+    assert_equal 300, i2.height
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+  
+  def test_create_solid_image
+    i = QuickMagick::Image.solid(100, 100, :white)
+    assert_equal 100, i.width
+  end
+  
+  def test_create_gradient_image
+    i = QuickMagick::Image.gradient(100, 100, QuickMagick::RadialGradient, :yellow, :blue)
+    assert_equal 100, i.width
   end
 end

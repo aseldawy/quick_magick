@@ -1,1 +1,64 @@
-QuickMagick is a gem for easily accessing ImageMagick command line tools from ruby programs.
+== QuickMagick
+
+QuickMagick is a gem for easily accessing ImageMagick command line tools from Ruby programs.
+
+== What is different?
+
+But what's different from other gems like RMagick and mini-magick?
+RMagick is a very good gem and QuickMagick is not a replacement of it.
+RMagick mainpulates images in memory.
+This is sometimes preferable but not in all cases.
+It uses a huge amonut of memory when manipulating images of large sizes.
+QuickMagick allows you to access all the powerful commands of ImageMagick that are accessible from command line.
+When you need more advanced options like reading pixel values, you should go to RMagick.
+
+The idea of this gem came from mini-magick.
+I used mini-magick for a little time but I found that some advanced options are missing.
+For example, you cannot manipulate multipage images.
+Also, it uses "mogrify" and creates temporary files to simulate the "convert" command which makes it slower as it accesses the disk multiple times.
+Another small stuf is that it relies on method_missing to set command line arguments which is slow and not preferable.
+
+In QuickMagick I tried to solve the above problems while keeping the API as easy as possible.
+
+== Examples
+
+Determine image information
+	i = QuickMagick::Image.read('test.jpg').first
+	i.width # Retrieves width in pixels
+	i.height # Retrieves height in pixels
+
+Resize and image
+	i = QuickMagick::Image.read('test.jpg').first
+	i.resize "300x300!"
+	i.save "resized_image.jpg"
+	
+	or
+	i.append_to_args 'resize', "300x300!"
+	
+	or 
+	i.resize 300, 300, nil, nil, QuickMagick::AspectGeometry
+	
+
+Access multipage image
+	i = QuickMagick::Image.read("multipage.pdf") {|image| image.density = 300}
+	i.size % number of pages
+	i.each_with_index do |page, i|
+		i.save "page_#{i}.jpg"
+	end
+
+From blob
+	i = QuickMagick::Image.from_blob(blob_data).first
+	i.sample "100x100!"
+	i.save
+
+Modify a file (mogrify)
+	i = QuickMagick::Image.read('test.jpg')
+	i.resize "100x100!"
+	i.save!
+
+You can also display an image to Xserver
+	i = QuickMagick::Image.read('test.jpg')
+	i.display
+
+Check all command line options of ImageMagick at
+http://www.imagemagick.org/script/convert.php
