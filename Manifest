@@ -1,0 +1,13 @@
+README
+Rakefile
+lib/quick_magick/image.rb
+lib/quick_magick/image_list.rb
+lib/quick_magick.rb
+Manifest
+quick_magick.gemspec
+test/image_test.rb
+test/logo-small.jpg
+test/badfile.xxx
+test/multipage.tif
+test/image_list_test.rb
+test/imagemagick-logo.png

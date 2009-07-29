@@ -33,7 +33,7 @@ Resize and image
 	i.save "resized_image.jpg"
 	
 	or
-	i.append_to_args 'resize', "300x300!"
+	i.append_to_operators 'resize', "300x300!"
 	
 	or 
 	i.resize 300, 300, nil, nil, QuickMagick::AspectGeometry
@@ -59,6 +59,22 @@ Modify a file (mogrify)
 You can also display an image to Xserver
 	i = QuickMagick::Image.read('test.jpg')
 	i.display
+
+QuickMagick supports also ImageLists
+	il = QuickMagick::ImageList.new('test.jpg', 'test2.jpg')
+	il << QuickMagick::Image.read('test3.jpg')
+	il.format = 'gif'
+	il.resize "300x300>"
+	il.save!
+
+You can also create images from scratch
+	# Create a 300x300 gradient image from yellow to red
+	i1 = QuickMagick::Image::gradient(300, 300, QuickMagick::RadialGradient, :yellow, :red)
+	i1.save 'gradient.png'
+	
+	# Create a 100x200 CheckerBoard image
+	i1 = QuickMagick::Image::pattern(100, 200, :checkerboard)
+	i1.display
 
 Check all command line options of ImageMagick at
 http://www.imagemagick.org/script/convert.php
