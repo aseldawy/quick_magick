@@ -122,4 +122,24 @@ class ImageTest < Test::Unit::TestCase
     i = QuickMagick::Image.gradient(100, 100, QuickMagick::RadialGradient, :yellow, :blue)
     assert_equal 100, i.width
   end
+  
+  def test_line_primitive
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.draw_line(0, 0, 50, 50)
+    out_filename = File.join($base_dir, "line_test.gif")
+    i.save out_filename
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+  
+  def test_text_primitive
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.draw_text(0, 50, "Ahmed Eldawy")
+    out_filename = File.join($base_dir, "text_test.gif")
+    i.save out_filename
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
 end

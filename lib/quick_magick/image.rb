@@ -16,7 +16,7 @@ module QuickMagick
       # create an array of images from the given file
       def read(filename, &proc)
         info = identify(%Q<"#{filename}">)
-        if info.empty?
+        unless $?.success?
           raise QuickMagick::QuickMagickError, "Illegal file \"#{filename}\""
         end
         info_lines = info.split(/[\r\n]/)
@@ -34,6 +34,8 @@ module QuickMagick
       
       alias open read
       
+      # Creates a new image initially set to gradient
+      # Default gradient is linear gradient from black to white
       def gradient(width, height, type=QuickMagick::LinearGradient, color1=nil, color2=nil)
         template_name = type + ":"
         template_name << color1.to_s if color1
@@ -63,9 +65,10 @@ module QuickMagick
 
       # returns info for an image using <code>identify</code> command
       def identify(filename)
-        `identify #{filename}`
+        `identify #{filename} 2>&1`
       end
 
+      # Encodes a geometry string with the given options
       def retrieve_geometry(width, height=nil, x=nil, y=nil, flag=nil)
         geometry_string = ""
         geometry_string << width.to_s if width
@@ -79,14 +82,15 @@ module QuickMagick
 
     # append the given option, value pair to the args for the current image
     def append_to_operators(arg, value="")
-      @operators << %Q<-#{arg} #{value}>
+      @operators << %Q<-#{arg} "#{value}">
     end
 
     # append the given option, value pair to the settings of the current image
     def append_to_settings(arg, value="")
-      @settings << %Q<-#{arg} #{value}>
+      @settings << %Q<-#{arg} "#{value}">
     end
 
+    # Image settings supported by ImageMagick
     IMAGE_SETTINGS_METHODS = %w{
       adjoin affine alpha antialias authenticate attenuate background bias black-point-compensation
       blue-primary bordercolor caption channel colors colorspace comment compose compress define
@@ -99,6 +103,7 @@ module QuickMagick
       density page sampling-factor size tile-offset
     }
 
+    # Image operators supported by ImageMagick
     IMAGE_OPERATORS_METHODS = %w{
       alpha auto-orient bench black-threshold bordercolor charcoal clip clip-mask clip-path colorize
       contrast convolve cycle decipher deskew despeckle distort draw edge encipher emboss enhance equalize
@@ -117,16 +122,19 @@ module QuickMagick
       crop
       }
 
+    # fills a rectangle with a solid color
     def floodfill(width, height=nil, x=nil, y=nil, flag=nil, color=nil)
       # TODO do a special method for floodfill
     end
 
+    # methods that are called with (=)
     WITH_EQUAL_METHODS =
       %w{alpha antialias background bias black-point-compensation blue-primary border bordercolor caption
         cahnnel colors colorspace comment compose compress depth density encoding endian family fill filter
         font format frame fuzz geometry gravity label mattecolor page pointsize quality undercolor units weight
         brodercolor transparent type size}
 
+    # methods that takes geometry options
     WITH_GEOMETRY_METHODS =
       %w{density page sampling-factor size tile-offset adaptive-blur adaptive-resize adaptive-sharpen
         annotate blur border chop contrast-stretch extent extract floodfill frame gaussian-blur
@@ -137,15 +145,15 @@ module QuickMagick
     IMAGE_SETTINGS_METHODS.each do |method|
       if WITH_EQUAL_METHODS.include?(method)
         define_method((method+'=').to_sym) do |arg|
-          append_to_settings(method, %Q<"#{arg}"> )
+          append_to_settings(method, arg)
         end
       elsif WITH_GEOMETRY_METHODS.include?(method)
         define_method((method).to_sym) do |*args|
-          append_to_settings(method, %Q<"#{QuickMagick::Image.retrieve_geometry(*args) }"> )
+          append_to_settings(method, QuickMagick::Image.retrieve_geometry(*args) )
         end
       else
         define_method(method.to_sym) do |*args|
-          append_to_settings(method, args.collect{|arg| %Q<"#{arg}"> }.join(" "))
+          append_to_settings(method, args.join(" "))
         end
       end
     end
@@ -153,15 +161,15 @@ module QuickMagick
     IMAGE_OPERATORS_METHODS.each do |method|
       if WITH_EQUAL_METHODS.include?(method)
         define_method((method+'=').to_sym) do |arg|
-          append_to_operators(method, %Q<"#{arg}"> )
+          append_to_operators(method, arg )
         end
       elsif WITH_GEOMETRY_METHODS.include?(method)
         define_method((method).to_sym) do |*args|
-          append_to_operators(method, %Q<"#{QuickMagick::Image.retrieve_geometry(*args) }"> )
+          append_to_operators(method, QuickMagick::Image.retrieve_geometry(*args) )
         end
       else
         define_method(method.to_sym) do |*args|
-          append_to_operators(method, args.collect{|arg| %Q<"#{arg}"> }.join(" "))
+          append_to_operators(method, args.join(" "))
         end
       end
     end
@@ -176,27 +184,172 @@ module QuickMagick
       @pseudo_image = pseudo_image
       if info_line
         @image_infoline = info_line.split
-        @image_infoline[0..1] = @image_infoline[0..1].join(' ') while !@image_infoline[0].start_with?(image_filename)
+        @image_infoline[0..1] = @image_infoline[0..1].join(' ') while @image_infoline.size > 1 && !@image_infoline[0].start_with?(image_filename)
       end
       @operators = ""
       @settings = ""
     end
     
+    # The command line so far that will be used to convert or save the image
     def command_line
       %Q<#{@settings} "#{image_filename}" #{@operators}>
     end
     
+    # An information line about the image obtained using 'identify' command line
     def image_infoline
       unless @image_infoline
         @image_infoline = QuickMagick::Image::identify(command_line).split
-        @image_infoline[0..1] = @image_infoline[0..1].join(' ') while !@image_infoline[0].start_with?(image_filename)
+        @image_infoline[0..1] = @image_infoline[0..1].join(' ') while @image_infoline.size > 1 && !@image_infoline[0].start_with?(image_filename)
       end
       @image_infoline
     end
 
+    # converts options passed to any primitive to a string that can be passed to ImageMagick
+    # options allowed are:
+    # * rotate          degrees
+    # * translate       dx,dy
+    # * scale           sx,sy
+    # * skewX           degrees
+    # * skewY           degrees
+    # * gravity         NorthWest, North, NorthEast, West, Center, East, SouthWest, South, or SouthEast
+    # The rotate primitive rotates subsequent shape primitives and text primitives about the origin of the main image.
+    # If you set the region before the draw command, the origin for transformations is the upper left corner of the region.
+    # The translate primitive translates subsequent shape and text primitives.
+    # The scale primitive scales them.
+    # The skewX and skewY primitives skew them with respect to the origin of the main image or the region.
+    # The text gravity primitive only affects the placement of text and does not interact with the other primitives.
+    # It is equivalent to using the gravity method, except that it is limited in scope to the draw_text option in which it appears.
+    def options_to_str(options)
+      options.to_a.flatten.join " "
+    end
+
+    # Converts an array of coordinates to a string that can be passed to polygon, polyline and bezier
+    def points_to_str(points)
+      raise QuickMagick::QuickMagickError, "Points must be an even number of coordinates" if points.size.odd?
+      points_str = ""
+      points.each_slice(2) do |point|
+        points_str << point.join(",") << " "
+      end
+      points_str
+    end
+
+    # The shape primitives are drawn in the color specified by the preceding -fill setting.
+    # For unfilled shapes, use -fill none.
+    # You can optionally control the stroke (the "outline" of a shape) with the -stroke and -strokewidth settings.
+    
+    # draws a point at the given location in pixels
+    # A point primitive is specified by a single point in the pixel plane, that is, by an ordered pair
+    # of integer coordinates, x,y.
+    # (As it involves only a single pixel, a point primitive is not affected by -stroke or -strokewidth.)
+    def draw_point(x, y, options={})
+      append_to_operators("draw", "#{options_to_str(options)} point #{x},#{y}")
+    end
+    
+    # draws a line between the given two points
+    # A line primitive requires a start point and end point.
+    def draw_line(x0, y0, x1, y1, options={})
+      append_to_operators("draw", "#{options_to_str(options)} line #{x0},#{y0} #{x1},#{y1}")
+    end
+    
+    # draw a rectangle with the given two corners
+    # A rectangle primitive is specified by the pair of points at the upper left and lower right corners.
+    def draw_rectangle(x0, y0, x1, y1, options={})
+      append_to_operators("draw", "#{options_to_str(options)} rectangle #{x0},#{y0} #{x1},#{y1}")
+    end
+
+    # draw a rounded rectangle with the given two corners
+    # wc and hc are the width and height of the arc
+    # A roundRectangle primitive takes the same corner points as a rectangle
+    # followed by the width and height of the rounded corners to be removed.
+    def draw_round_rectangle(x0, y0, x1, y1, wc, hc, options={})
+      append_to_operators("draw", "#{options_to_str(options)} roundRectangle #{x0},#{y0} #{x1},#{y1} #{wc},#{hc}")
+    end
+    
+    # The arc primitive is used to inscribe an elliptical segment in to a given rectangle.
+    # An arc requires the two corners used for rectangle (see above) followed by
+    # the start and end angles of the arc of the segment segment (e.g. 130,30 200,100 45,90).
+    # The start and end points produced are then joined with a line segment and the resulting segment of an ellipse is filled.
+    def draw_arc(x0, y0, x1, y1, a0, a1, options={})
+      append_to_operators("draw", "#{options_to_str(options)} arc #{x0},#{y0} #{x1},#{y1} #{a0},#{a1}")
+    end
+
+    # Use ellipse to draw a partial (or whole) ellipse.
+    # Give the center point, the horizontal and vertical "radii"
+    # (the semi-axes of the ellipse) and start and end angles in degrees (e.g. 100,100 100,150 0,360).
+    def draw_ellipse(x0, y0, rx, ry, a0, a1, options={})
+      append_to_operators("draw", "#{options_to_str(options)} ellipse #{x0},#{y0} #{rx},#{ry} #{a0},#{a1}")
+    end
+    
+    # The circle primitive makes a disk (filled) or circle (unfilled). Give the center and any point on the perimeter (boundary).
+    def draw_circle(x0, y0, x1, y1, options={})
+      append_to_operators("draw", "#{options_to_str(options)} circle #{x0},#{y0} #{x1},#{y1}")
+    end
+    
+    # The polyline primitive requires three or more points to define their perimeters.
+    # A polyline is simply a polygon in which the final point is not stroked to the start point.
+    # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
+    def draw_polyline(points, options={})
+      append_to_operators("draw", "#{options_to_str(options)} polyline #{points_to_str(points)}")
+    end
+
+    # The polygon primitive requires three or more points to define their perimeters.
+    # A polyline is simply a polygon in which the final point is not stroked to the start point.
+    # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
+    def draw_polygon(points, options={})
+      append_to_operators("draw", "#{options_to_str(options)} polygon #{points_to_str(points)}")
+    end
+
+    # The Bezier primitive creates a spline curve and requires three or points to define its shape.
+    # The first and last points are the knots and these points are attained by the curve,
+    # while any intermediate coordinates are control points.
+    # If two control points are specified, the line between each end knot and its sequentially
+    # respective control point determines the tangent direction of the curve at that end.
+    # If one control point is specified, the lines from the end knots to the one control point
+    # determines the tangent directions of the curve at each end.
+    # If more than two control points are specified, then the additional control points
+    # act in combination to determine the intermediate shape of the curve.
+    # In order to draw complex curves, it is highly recommended either to use the path primitive
+    # or to draw multiple four-point bezier segments with the start and end knots of each successive segment repeated.
+    def draw_bezier(points, options={})
+      append_to_operators("draw", "#{options_to_str(options)} bezier #{points_to_str(points)}")
+    end
+    
+    # A path represents an outline of an object, defined in terms of moveto
+    # (set a new current point), lineto (draw a straight line), curveto (draw a Bezier curve),
+    # arc (elliptical or circular arc) and closepath (close the current shape by drawing a
+    # line to the last moveto) elements.
+    # Compound paths (i.e., a path with subpaths, each consisting of a single moveto followed by
+    # one or more line or curve operations) are possible to allow effects such as donut holes in objects.
+    # (See http://www.w3.org/TR/SVG/paths.html)
+    def draw_path(path_spec, options={})
+      append_to_operators("draw", "#{options_to_str(options)} path #{path_spec}")
+    end
+    
+    # Use image to composite an image with another image. Follow the image keyword
+    # with the composite operator, image location, image size, and filename
+    # You can use 0,0 for the image size, which means to use the actual dimensions found in the image header.
+    # Otherwise, it is scaled to the given dimensions. See -compose for a description of the composite operators.
+    def draw_image(operator, x0, y0, w, h, image_filename, options={})
+      append_to_operators("draw", "#{options_to_str(options)} image #{operator} #{x0},#{y0} #{w},#{h} \"#{image_filename}\"")
+    end
+    
+    # Use text to annotate an image with text. Follow the text coordinates with a string.
+    def draw_text(x0, y0, text, options={})
+      append_to_operators("draw", "#{options_to_str(options)} text #{x0},#{y0} '#{text}'")
+    end
+    
     # saves the current image to the given filename
     def save(output_filename)
-      `convert #{command_line} "#{output_filename}"`
+      result = `convert #{command_line} "#{output_filename}" 2>&1`
+      if $?.success?
+        return result 
+      else
+        error_message = <<-ERROR
+          Error executing command: convert #{command_line} "#{output_filename}"
+          Result is: #{result}
+        ERROR
+        raise QuickMagick::QuickMagickError, error_message
+      end
     end
     
     alias write save
@@ -205,36 +358,51 @@ module QuickMagick
     # saves the current image overwriting the original image file
     def save!
       raise QuickMagick::QuickMagickError, "Cannot mogrify a pseudo image" if @pseudo_image
-      `mogrify #{command_line}`
+      result = `mogrify #{command_line}`
+      if $?.success?
+        return result 
+      else
+        error_message = <<-ERROR
+          Error executing command: mogrify #{command_line}
+          Result is: #{result}
+        ERROR
+        raise QuickMagick::QuickMagickError, error_message
+      end
     end
 
     alias write! save!
     alias mogrify! save!
 
+    # image file format
     def format
       image_infoline[1]
     end
     
+    # columns of image in pixels
     def columns
       image_infoline[2].split('x').first.to_i
     end
     
     alias width columns
     
+    # rows of image in pixels
     def rows
       image_infoline[2].split('x').last.to_i
     end
     
     alias height rows
     
+    # Bit depth
     def bit_depth
       image_infoline[4].to_i
     end
     
+    # Number of different colors used in this image
     def colors
       image_infoline[6].to_i
     end
     
+    # returns size of image in bytes
     def size
       File.size?(image_filename)
     end
