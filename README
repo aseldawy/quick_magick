@@ -76,5 +76,11 @@ You can also create images from scratch
 	i1 = QuickMagick::Image::pattern(100, 200, :checkerboard)
 	i1.display
 
+... and draw primitives on them
+	i = QuickMagick::Image::solid(100, 100, :white)
+	i.draw_line(0,0,50,50)
+	i.draw_text(30, 30, "Hello world!", :rotate=>45)
+	i.save 'hello.jpg'
+
 Check all command line options of ImageMagick at
 http://www.imagemagick.org/script/convert.php
