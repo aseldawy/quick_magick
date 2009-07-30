@@ -82,12 +82,12 @@ module QuickMagick
 
     # append the given option, value pair to the args for the current image
     def append_to_operators(arg, value="")
-      @operators << %Q<-#{arg} "#{value}">
+      @operators << %Q<-#{arg} "#{value}" >
     end
 
     # append the given option, value pair to the settings of the current image
     def append_to_settings(arg, value="")
-      @settings << %Q<-#{arg} "#{value}">
+      @settings << %Q<-#{arg} "#{value}" >
     end
 
     # Image settings supported by ImageMagick
@@ -131,7 +131,8 @@ module QuickMagick
     WITH_EQUAL_METHODS =
       %w{alpha antialias background bias black-point-compensation blue-primary border bordercolor caption
         cahnnel colors colorspace comment compose compress depth density encoding endian family fill filter
-        font format frame fuzz geometry gravity label mattecolor page pointsize quality undercolor units weight
+        font format frame fuzz geometry gravity label mattecolor page pointsize quality stroke strokewidth
+        undercolor units weight
         brodercolor transparent type size}
 
     # methods that takes geometry options

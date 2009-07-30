@@ -11,14 +11,53 @@ This is sometimes preferable but not in all cases.
 It uses a huge amonut of memory when manipulating images of large sizes.
 QuickMagick allows you to access all the powerful commands of ImageMagick that are accessible from command line.
 When you need more advanced options like reading pixel values, you should go to RMagick.
+Another good point in QuickMagick is that it's very easy to install.
+It doesn't require any Magick libraries or compile something from source to be installed.
+A running copy of ImageMagick is enough.
 
-The idea of this gem came from mini-magick.
-I used mini-magick for a little time but I found that some advanced options are missing.
+The idea of this gem came from MiniMagick.
+I used MiniMagick for a little time but I found that some advanced options are missing.
 For example, you cannot manipulate multipage images.
 Also, it uses "mogrify" and creates temporary files to simulate the "convert" command which makes it slower as it accesses the disk multiple times.
-Another small stuf is that it relies on method_missing to set command line arguments which is slow and not preferable.
+Another small stuff is that it relies on method_missing to set command line arguments which is slow and not preferable.
 
 In QuickMagick I tried to solve the above problems while keeping the API as easy as possible.
+
+== Comparison
+
+I've made some test benches to compare the speed of QuickMagick, MiniMagick and RMagick.
+Here are the results:
+
+Test 1: resize a normal image (20 times)
+                  user     system      total        real
+mini          0.010000   0.070000   3.730000 (  3.693978)
+quick         0.010000   0.040000   3.270000 (  3.124558)
+rmagick       1.740000   1.610000   3.350000 (  3.283624)
+
+It's clear that QuickMagick is faster that MiniMagick.
+In this run RMagick was a little bit slower than QuickMagick.
+Actually, this is not always the case.
+Sometimes It's faster than QuickMagick.
+On average, we can say that they both take the same time.
+
+Test 2: resize a large image
+                  user     system      total        real
+mini          0.000000   0.030000  58.090000 ( 33.852697)
+quick         0.000000   0.000000  55.820000 ( 31.492870)
+
+Again QuickMagick is faster than MiniMagick.
+However, RMagick has failed to pass this test.
+It kept working and eating memory, cpu and harddisk till I had to unplug my computer to stop it.
+So, I removed it from this test bench.
+
+Test 3: generate random captchas (20)
+                  user     system      total        real
+quick         0.010000   0.020000   3.610000 (  4.952026)
+rmagick       1.320000   1.640000   2.960000 (  3.058445)
+
+In this last test, RMagick was 38% faster than QuickMagick.
+This is normal because it works in memory and doesn't have to parse a command line string to know what to draw.
+I couldn't test MiniMagick for this because it doesn't support an API for drawing functions.
 
 == Examples
 
