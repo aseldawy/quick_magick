@@ -1,6 +1,6 @@
 # check if ImageMagick is installed
 status = `identify --version`
-raise QuickMagick::QuickMagickError "ImageMagick not installed" if status.empty?
+raise QuickMagick::QuickMagickError("ImageMagick not installed") if status.empty?
 
 module QuickMagick
   class QuickMagickError < RuntimeError; end
@@ -25,6 +25,14 @@ module QuickMagick
   def self.random_string(length=10)
     @@CHARS ||= ("a".."z").to_a + ("1".."9").to_a 
     Array.new(length, '').collect{@@CHARS[rand(@@CHARS.size)]}.join
+  end
+end
+
+unless "".respond_to? :start_with?
+  class String
+    def start_with?(x)
+      self.index(x) == 0
+    end
   end
 end
 

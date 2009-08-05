@@ -8,6 +8,7 @@ module QuickMagick
       # create an array of images from the given blob data
       def from_blob(blob, &proc)
         file = Tempfile.new(QuickMagick::random_string)
+        file.binmode
         file.write(blob)
         file.close
         self.read(file.path, &proc)
@@ -28,7 +29,7 @@ module QuickMagick
             images << Image.new("#{filename}[#{i.to_s}]", info_line)
           end
         end
-        images.collect!(&proc)
+        images.collect!(&proc) if block_given?
         return images
       end
       
@@ -124,7 +125,7 @@ module QuickMagick
 
     # fills a rectangle with a solid color
     def floodfill(width, height=nil, x=nil, y=nil, flag=nil, color=nil)
-      # TODO do a special method for floodfill
+      append_to_operators "floodfill", QuickMagick::Image.retrieve_geometry(width, height, x, y, flag), color
     end
 
     # methods that are called with (=)
@@ -363,10 +364,10 @@ module QuickMagick
       if $?.success?
         return result 
       else
-        error_message = <<-ERROR
+        error_message = <<-ERRORMSG
           Error executing command: mogrify #{command_line}
           Result is: #{result}
-        ERROR
+        ERRORMSG
         raise QuickMagick::QuickMagickError, error_message
       end
     end
