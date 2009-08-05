@@ -290,6 +290,7 @@ module QuickMagick
     # The polyline primitive requires three or more points to define their perimeters.
     # A polyline is simply a polygon in which the final point is not stroked to the start point.
     # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
+    #  points - A single array with each pair forming a coordinate in the form (x, y). e.g. [0,0,100,100,100,0] will draw a polyline between points (0,0)-(100,100)-(100,0)
     def draw_polyline(points, options={})
       append_to_operators("draw", "#{options_to_str(options)} polyline #{points_to_str(points)}")
     end
@@ -297,6 +298,7 @@ module QuickMagick
     # The polygon primitive requires three or more points to define their perimeters.
     # A polyline is simply a polygon in which the final point is not stroked to the start point.
     # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
+    #  points - A single array with each pair forming a coordinate in the form (x, y). e.g. [0,0,100,100,100,0] will draw a polygon between points (0,0)-(100,100)-(100,0)
     def draw_polygon(points, options={})
       append_to_operators("draw", "#{options_to_str(options)} polygon #{points_to_str(points)}")
     end

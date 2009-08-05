@@ -29,29 +29,27 @@ I've made some test benches to compare the speed of QuickMagick, MiniMagick and 
 Here are the results:
 Test 1: resize a normal image
                   user     system      total        real
-mini          0.030000   0.040000   3.640000 (  3.585617)
-quick         0.010000   0.030000   3.330000 (  3.295369)
-rmagick       1.680000   1.660000   3.340000 (  3.150202)
+  mini          0.030000   0.040000   3.640000 (  3.585617)
+  quick         0.010000   0.030000   3.330000 (  3.295369)
+  rmagick       1.680000   1.660000   3.340000 (  3.150202)
 
-It's clear that QuickMagick is faster that MiniMagick.
+It's clear that QuickMagick is faster than MiniMagick.
 RMagick was the fastest as it accesses the requested operations directly without the need to load an executable file or parse a command line.
-----------------
 
 Test 2: resize a large image
                   user     system      total        real
-mini          0.000000   0.040000  57.150000 (130.609229)
-quick         0.010000   0.010000  56.510000 ( 58.426361)
+  mini          0.000000   0.040000  57.150000 (130.609229)
+  quick         0.010000   0.010000  56.510000 ( 58.426361)
 
 Again QuickMagick is faster than MiniMagick.
 However, RMagick has failed to pass this test.
 It kept working and eating memory, cpu and harddisk till I had to unplug my computer to stop it.
 So, I removed it from this test bench.
------------------
 
 Test 3: generate random captchas
                   user     system      total        real
-quick         0.000000   0.000000   0.290000 (  3.623418)
-rmagick       0.150000   0.120000   0.270000 (  3.171975)
+  quick         0.000000   0.000000   0.290000 (  3.623418)
+  rmagick       0.150000   0.120000   0.270000 (  3.171975)
 
 In this last test, RMagick was about 12% faster than QuickMagick.
 This is normal because it works in memory and doesn't have to parse a command line string to know what to draw.
@@ -64,7 +62,7 @@ Also RMagick sometimes fail when it tries to handle large images.
 MiniMagick is proved to be a bit slower than QuickMagick with no advantage.
 So, it's better to use QuickMagick when your application is not image-centric.
 This means, you're not going to build an image manipulation tool or something like this.
-For normal operations like resize, rotate, generating captchas ... etc, QuickMagick will be a good friend for you.
+For normal operations like resize, rotate, generating captchas ... etc, QuickMagick will be a good friend of you.
 
 == Examples
 
