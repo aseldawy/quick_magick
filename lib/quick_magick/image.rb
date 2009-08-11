@@ -42,7 +42,7 @@ module QuickMagick
         template_name << color1.to_s if color1
         template_name << '-' << color2.to_s if color2
         i = self.new(template_name, nil, true)
-        i.size = QuickMagick::Image::retrieve_geometry(width, height)
+        i.size = QuickMagick::geometry(width, height)
         i
       end
       
@@ -51,7 +51,7 @@ module QuickMagick
         template_name = QuickMagick::SolidColor+":"
         template_name << color.to_s if color
         i = self.new(template_name, nil, true)
-        i.size = QuickMagick::Image::retrieve_geometry(width, height)
+        i.size = QuickMagick::geometry(width, height)
         i
       end
       
@@ -60,7 +60,7 @@ module QuickMagick
         raise QuickMagick::QuickMagickError, "Invalid pattern '#{pattern.to_s}'" unless QuickMagick::Patterns.include?(pattern.to_s)
         template_name = "pattern:#{pattern.to_s}"
         i = self.new(template_name, nil, true)
-        i.size = QuickMagick::Image::retrieve_geometry(width, height)
+        i.size = QuickMagick::geometry(width, height)
         i
       end
 
@@ -69,26 +69,12 @@ module QuickMagick
         `identify #{filename} 2>&1`
       end
 
-      # Encodes a geometry string with the given options
-      def retrieve_geometry(width, height=nil, x=nil, y=nil, flag=nil)
-        geometry_string = ""
-        geometry_string << width.to_s if width
-        geometry_string << 'x' << height.to_s if height
-        geometry_string << '+' << x.to_s if x
-        geometry_string << '+' << y.to_s if y
-        geometry_string << flag if flag
-        geometry_string
-      end
-    end
-
-    # append the given option, value pair to the args for the current image
-    def append_to_operators(arg, value="")
-      @operators << %Q<-#{arg} "#{value}" >
     end
 
     # append the given option, value pair to the settings of the current image
     def append_to_settings(arg, value="")
-      @settings << %Q<-#{arg} "#{value}" >
+      @arguments << %Q<-#{arg} "#{value}" >
+      self
     end
 
     # Image settings supported by ImageMagick
@@ -104,10 +90,28 @@ module QuickMagick
       density page sampling-factor size tile-offset
     }
 
+    # append the given option, value pair to the args for the current image
+    def append_to_operators(arg, value="")
+      if @last_is_draw
+        @arguments.insert(@arguments.rindex('"'), " #{value}")
+      else
+        @arguments << %Q<-#{arg} "#{value}" >
+      end
+      @last_is_draw = arg == 'draw'
+      self
+    end
+    
+    # Reverts this image to its last saved state.
+    # Note that you cannot revert an image created from scratch.
+    def revert!
+      raise QuickMagick::QuickMagickError, "Cannot revert a pseudo image" if @pseudo_image
+      @arguments = ""
+    end
+
     # Image operators supported by ImageMagick
     IMAGE_OPERATORS_METHODS = %w{
       alpha auto-orient bench black-threshold bordercolor charcoal clip clip-mask clip-path colorize
-      contrast convolve cycle decipher deskew despeckle distort draw edge encipher emboss enhance equalize
+      contrast convolve cycle decipher deskew despeckle distort edge encipher emboss enhance equalize
       evaluate flip flop function gamma identify implode layers level level-colors median modulate monochrome
       negate noise normalize opaque ordered-dither NxN paint polaroid posterize print profile quantize
       radial-blur Raise random-threshold recolor render rotate segment sepia-tone set shade solarize
@@ -122,11 +126,6 @@ module QuickMagick
       append average clut coalesce combine composite deconstruct flatten fx hald-clut morph mosaic process reverse separate write
       crop
       }
-
-    # fills a rectangle with a solid color
-    def floodfill(width, height=nil, x=nil, y=nil, flag=nil, color=nil)
-      append_to_operators "floodfill", QuickMagick::Image.retrieve_geometry(width, height, x, y, flag), color
-    end
 
     # methods that are called with (=)
     WITH_EQUAL_METHODS =
@@ -151,7 +150,7 @@ module QuickMagick
         end
       elsif WITH_GEOMETRY_METHODS.include?(method)
         define_method((method).to_sym) do |*args|
-          append_to_settings(method, QuickMagick::Image.retrieve_geometry(*args) )
+          append_to_settings(method, QuickMagick::geometry(*args) )
         end
       else
         define_method(method.to_sym) do |*args|
@@ -167,13 +166,18 @@ module QuickMagick
         end
       elsif WITH_GEOMETRY_METHODS.include?(method)
         define_method((method).to_sym) do |*args|
-          append_to_operators(method, QuickMagick::Image.retrieve_geometry(*args) )
+          append_to_operators(method, QuickMagick::geometry(*args) )
         end
       else
         define_method(method.to_sym) do |*args|
           append_to_operators(method, args.join(" "))
         end
       end
+    end
+
+    # Fills a rectangle with a solid color
+    def floodfill(width, height=nil, x=nil, y=nil, flag=nil, color=nil)
+      append_to_operators "floodfill", QuickMagick::geometry(width, height, x, y, flag), color
     end
     
     # define attribute readers (getters)
@@ -188,13 +192,12 @@ module QuickMagick
         @image_infoline = info_line.split
         @image_infoline[0..1] = @image_infoline[0..1].join(' ') while @image_infoline.size > 1 && !@image_infoline[0].start_with?(image_filename)
       end
-      @operators = ""
-      @settings = ""
+      @arguments = ""
     end
     
     # The command line so far that will be used to convert or save the image
     def command_line
-      %Q<#{@settings} "#{image_filename}" #{@operators}>
+      %Q< "(" #{@arguments} "#{image_filename}" ")" >
     end
     
     # An information line about the image obtained using 'identify' command line
@@ -214,6 +217,8 @@ module QuickMagick
     # * skewX           degrees
     # * skewY           degrees
     # * gravity         NorthWest, North, NorthEast, West, Center, East, SouthWest, South, or SouthEast
+    # * stroke          color
+    # * fill            color
     # The rotate primitive rotates subsequent shape primitives and text primitives about the origin of the main image.
     # If you set the region before the draw command, the origin for transformations is the upper left corner of the region.
     # The translate primitive translates subsequent shape and text primitives.
@@ -364,6 +369,8 @@ module QuickMagick
       raise QuickMagick::QuickMagickError, "Cannot mogrify a pseudo image" if @pseudo_image
       result = `mogrify #{command_line}`
       if $?.success?
+        # remove all operations to avoid duplicate operations
+        revert!
         return result 
       else
         error_message = <<-ERRORMSG

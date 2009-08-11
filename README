@@ -1,33 +1,82 @@
-== QuickMagick
+= Quick Magick
 
+== What is QuickMagick
 QuickMagick is a gem for easily accessing ImageMagick command line tools from Ruby programs.
 
+== When to use QuickMagick
+QuickMagick is a library that allows you to create and manipulate images.
+When you are faced with a problem that requires high quality manipulation of images you can use QuickMagick.
+These are some situation when QuickMagick will be useful for you:
+* Suppose you built an image gallery site that allows users to upload images. You can use QuickMagick to check uploaded images dimensions and make thumbnails for them.
+* Generate captchas to check whether the user is a robot or a human.
+* Generate graphical reports and charts to the user based on some calculations.
+* Convert uploaded images to a format usable by your application. For example, you can transform .pdf files to .jpg so that you can display them at your web site.
+
+== Features
+* Open an existing image from disk and determine basic info like width, height.
+* Open an image from blob. For example, an image read from an upload form.
+* Do basic and advanced operations on images like resize, rotate, shear, motion blur and other.
+* Create an image from scratch and draw basic elements on it like line, circle and text. This allows making captchas for example.
+* Combine images using ImageList to make a multipage or animated images.
+* API is very simple and powerful.
+* Minimizes disk access by calling command line tools only when required.
+
+== How to install
+First, you should install ImageMagick (http://www.imagemagick.org/) on your machine.
+Command lines of ImageMagick must be in your system path.
+You can check this by running the command:
+  identify --version
+Now to install QuickMagick just type at your command line:
+  gem install quick_magick
+... and it's done.
+You don't have to install any libraries or compile code from source.
+
 == What is different?
-
 But what's different from other gems like RMagick and mini-magick?
-RMagick is a very good gem and QuickMagick is not a replacement of it.
-RMagick mainpulates images in memory.
-This is sometimes preferable but not in all cases.
-It uses a huge amonut of memory when manipulating images of large sizes.
-QuickMagick allows you to access all the powerful commands of ImageMagick that are accessible from command line.
-When you need more advanced options like reading pixel values, you should go to RMagick.
-Another good point in QuickMagick is that it's very easy to install.
-It doesn't require any Magick libraries or compile something from source to be installed.
-A running copy of ImageMagick is enough.
 
-The idea of this gem came from MiniMagick.
-I used MiniMagick for a little time but I found that some advanced options are missing.
-For example, you cannot manipulate multipage images.
-Also, it uses "mogrify" and creates temporary files to simulate the "convert" command which makes it slower as it accesses the disk multiple times.
-Another small stuff is that it relies on method_missing to set command line arguments which is slow and not preferable.
+The story begins when I was working on a project at BadrIT (http://www.badrit.com) using Ruby on Rails.
+In this projects users were uploading images in many formats like pdf, tiff and png.
+We were using Flex as a front end to display and annotate these images.
+Flex has a limitation in that it can open images up to 8192x8192.
+Unfortunately, users were uploading images much larger than this.
+Another issue is that Flex can only open .jpg, .png and .gif files.
+The solution was to convert all images uploaded to one of these formats and resizing them down to at most 8192x8192.
 
-In QuickMagick I tried to solve the above problems while keeping the API as easy as possible.
+First, I used ImageMagick as a command line tool and was calling it using system calls.
+This accomplished the work perfectly buy my source code was a rubbish.
+It has many lines of code to handle creating temporary files and accessing multipage tiff and pdf files.
+I found RMagick at that time and decided to use it.
+It caused the code to be much simple without affecting performance notably.
+It worked with me well while I was using my application with test images.
+Once I decided to test it with real images it failed.
+For example, when I transform a tiff image from 14400x9600 to 8192x8192 while transforming it to gif, my machine runs out of memory (2GB RAM).
+When I tried to make the same operation from command line using (convert) it was working much better.
+It did not finish in a second but at least it worked correctly.
+The solution was to return back to command line.
+
+I searched for alternatives and found MiniMagick.
+MiniMagick is a gem that allows you to perform basic operations using ImageMagick through command line tools.
+I tried to use it but it was not good enough.
+First, it writes temporary images and files as it is working which makes it slow for nothing.
+Second, it doesn't handle multipage images.
+I tried it with a .pdf file and I found that it handled the first page only.
+Third, it doesn't give an API to draw images from scratch.
+Actually, I didn't need this feature, but I may need it in the future.
+
+At this point I decided to make my own gem and QuickMagick was born.
+I addressed the problems of MiniMagick while using the same main idea.
+First, QuickMagick doesn't write any temporary images to disk.
+It doesn't issue any command line commands till the very end when you are saving the image.
+Second, I made an API similar to RMagick which allows for accessing multipage images.
+Third, I added API commands to create images from scratch and drawing simple primitives on images.
+I tested my gem, compared it to MiniMagick and RMagick and it pleased me.
 
 == Comparison
-
 I've made some test benches to compare the speed of QuickMagick, MiniMagick and RMagick.
+All denoted numbers are in seconds.
 Here are the results:
-Test 1: resize a normal image
+
+===Test 1: resize a normal image
                   user     system      total        real
   mini          0.030000   0.040000   3.640000 (  3.585617)
   quick         0.010000   0.030000   3.330000 (  3.295369)
@@ -36,7 +85,7 @@ Test 1: resize a normal image
 It's clear that QuickMagick is faster than MiniMagick.
 RMagick was the fastest as it accesses the requested operations directly without the need to load an executable file or parse a command line.
 
-Test 2: resize a large image
+===Test 2: resize a large image
                   user     system      total        real
   mini          0.000000   0.040000  57.150000 (130.609229)
   quick         0.010000   0.010000  56.510000 ( 58.426361)
@@ -46,7 +95,7 @@ However, RMagick has failed to pass this test.
 It kept working and eating memory, cpu and harddisk till I had to unplug my computer to stop it.
 So, I removed it from this test bench.
 
-Test 3: generate random captchas
+===Test 3: generate random captchas
                   user     system      total        real
   quick         0.000000   0.000000   0.290000 (  3.623418)
   rmagick       0.150000   0.120000   0.270000 (  3.171975)
@@ -65,7 +114,6 @@ This means, you're not going to build an image manipulation tool or something li
 For normal operations like resize, rotate, generating captchas ... etc, QuickMagick will be a good friend of you.
 
 == Examples
-
 Determine image information
 	i = QuickMagick::Image.read('test.jpg').first
 	i.width # Retrieves width in pixels
@@ -104,7 +152,7 @@ You can also display an image to Xserver
 	i = QuickMagick::Image.read('test.jpg')
 	i.display
 
-QuickMagick supports also ImageLists
+QuickMagick supports also ImageList s
 	# Batch generate a list of jpg files to gif while resizing them
 	il = QuickMagick::ImageList.new('test.jpg', 'test2.jpg')
 	il << QuickMagick::Image.read('test3.jpg')
@@ -127,5 +175,8 @@ QuickMagick supports also ImageLists
 	i.draw_text(30, 30, "Hello world!", :rotate=>45)
 	i.save 'hello.jpg'
 
-Check all command line options of ImageMagick at
+For more information on drawing API visit:
+http://www.imagemagick.org/Usage/draw/
+
+Check all command line options of ImageMagick at:
 http://www.imagemagick.org/script/convert.php
