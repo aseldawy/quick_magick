@@ -353,6 +353,11 @@ module QuickMagick
     def save(output_filename)
       result = `convert #{command_line} "#{output_filename}" 2>&1`
       if $?.success?
+      	if @pseudo_image
+      		# since it's been saved, convert it to normal image (not pseudo)
+      		initialize(output_filename)
+		    	revert!
+      	end
         return result 
       else
         error_message = <<-ERROR

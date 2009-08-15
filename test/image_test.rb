@@ -199,4 +199,17 @@ class ImageTest < Test::Unit::TestCase
     assert_equal 640, i2.width
     assert_equal 480, i2.height
   end
+  
+  def test_image_converted_from_pseudo_to_normal
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.stroke = "red"
+    i.draw_line(0,0,20,20)
+    out_filename = File.join($base_dir, "draw_test.gif")
+    assert_raises QuickMagick::QuickMagickError do
+      i.save!
+    end
+    i.save out_filename
+    # Now it's non pseudo
+    i.save!
+  end
 end
