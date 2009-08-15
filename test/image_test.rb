@@ -150,8 +150,22 @@ class ImageTest < Test::Unit::TestCase
   end
   
   def test_line_and_circle
-    i = QuickMagick::Image.solid(100, 100, :white)
+    i = QuickMagick::Image.solid(100, 100)
     i.draw_line(0,0,20,20)
+    i.draw_circle(30,30,20,20)
+    assert_equal %Q{ "(" -size "100x100" -draw " line 0,0 20,20  circle 30,30 20,20"  "xc:" ")" }, i.command_line
+    out_filename = File.join($base_dir, "draw_test.gif")
+    i.save out_filename
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+  
+  def test_lines_with_colors
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.stroke = "red"
+    i.draw_line(0,0,20,20)
+    i.stroke = "blue"
     i.draw_circle(30,30,20,20)
     out_filename = File.join($base_dir, "draw_test.gif")
     i.save out_filename

@@ -23,7 +23,7 @@ These are some situation when QuickMagick will be useful for you:
 
 == How to install
 First, you should install ImageMagick (http://www.imagemagick.org/) on your machine.
-Command lines of ImageMagick must be in your system path.
+Command line tools of ImageMagick must be in your system path.
 You can check this by running the command:
   identify --version
 Now to install QuickMagick just type at your command line:

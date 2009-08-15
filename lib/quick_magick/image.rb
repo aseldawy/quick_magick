@@ -74,6 +74,7 @@ module QuickMagick
     # append the given option, value pair to the settings of the current image
     def append_to_settings(arg, value="")
       @arguments << %Q<-#{arg} "#{value}" >
+      @last_is_draw = false
       self
     end
 
@@ -92,12 +93,13 @@ module QuickMagick
 
     # append the given option, value pair to the args for the current image
     def append_to_operators(arg, value="")
-      if @last_is_draw
+      is_draw = (arg == 'draw')
+      if @last_is_draw && is_draw
         @arguments.insert(@arguments.rindex('"'), " #{value}")
       else
         @arguments << %Q<-#{arg} "#{value}" >
       end
-      @last_is_draw = arg == 'draw'
+      @last_is_draw = is_draw
       self
     end
     
