@@ -17,9 +17,6 @@ module QuickMagick
       # create an array of images from the given file
       def read(filename, &proc)
         info = identify(%Q<"#{filename}">)
-        unless $?.success?
-          raise QuickMagick::QuickMagickError, "Illegal file \"#{filename}\""
-        end
         info_lines = info.split(/[\r\n]/)
         images = []
         if info_lines.size == 1
@@ -66,7 +63,11 @@ module QuickMagick
 
       # returns info for an image using <code>identify</code> command
       def identify(filename)
-        `identify #{filename} 2>&1`
+        result = `identify #{filename} 2>&1`
+        unless $?.success?
+          raise QuickMagick::QuickMagickError, "Illegal file \"#{filename}\""
+        end
+        result
       end
 
     end
@@ -204,6 +205,7 @@ module QuickMagick
     
     # An information line about the image obtained using 'identify' command line
     def image_infoline
+      return nil if @pseudo_image
       unless @image_infoline
         @image_infoline = QuickMagick::Image::identify(command_line).split
         @image_infoline[0..1] = @image_infoline[0..1].join(' ') while @image_infoline.size > 1 && !@image_infoline[0].start_with?(image_filename)
