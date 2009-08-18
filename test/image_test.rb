@@ -74,6 +74,23 @@ class ImageTest < Test::Unit::TestCase
     File.delete(out_filename) if out_filename && File.exists?(out_filename)
   end
   
+
+  def test_monochrome
+    i = QuickMagick::Image.read(@logo_filename).first
+    i.resize("300x300!")
+    i.monochrome
+    out_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
+    assert_equal 300, i2.width
+    assert_equal 300, i2.height
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+
   def test_read_with_initialize
     i = QuickMagick::Image.read(@logo_filename) do |image|
       image.resize("300x300!")
