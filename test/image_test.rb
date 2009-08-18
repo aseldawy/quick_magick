@@ -170,7 +170,7 @@ class ImageTest < Test::Unit::TestCase
     i = QuickMagick::Image.solid(100, 100)
     i.draw_line(0,0,20,20)
     i.draw_circle(30,30,20,20)
-    assert_equal %Q{ "(" -size "100x100" -draw " line 0,0 20,20  circle 30,30 20,20"  "xc:" ")" }, i.command_line
+    assert_equal %Q{ "(" -size 100x100 -draw " line 0,0 20,20  circle 30,30 20,20"  "xc:" ")" }, i.command_line
     out_filename = File.join($base_dir, "draw_test.gif")
     i.save out_filename
   ensure
