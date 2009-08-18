@@ -29,7 +29,7 @@ module QuickMagick
             images << Image.new("#{filename}[#{i.to_s}]", info_line)
           end
         end
-        images.collect!(&proc) if block_given?
+        images.each(&proc) if block_given?
         return images
       end
       

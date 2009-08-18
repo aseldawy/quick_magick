@@ -74,6 +74,23 @@ class ImageTest < Test::Unit::TestCase
     File.delete(out_filename) if out_filename && File.exists?(out_filename)
   end
   
+  def test_read_with_initialize
+    i = QuickMagick::Image.read(@logo_filename) do |image|
+      image.resize("300x300!")
+      image.colors = 2
+    end.first
+    out_filename = File.join($base_dir, "imagemagick-resized.png")
+    File.delete out_filename if File.exists?(out_filename)
+    i.save(out_filename)
+    assert File.exists?(out_filename)
+    i2 = QuickMagick::Image.read(out_filename).first
+    assert_equal 300, i2.width
+    assert_equal 300, i2.height
+  ensure
+    # clean up
+    File.delete(out_filename) if out_filename && File.exists?(out_filename)
+  end
+  
   def test_crop_image
     i = QuickMagick::Image.read(@logo_filename).first
     i.crop("300x200+0+0")
