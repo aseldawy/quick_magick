@@ -30,7 +30,27 @@ class ImageTest < Test::Unit::TestCase
     i = QuickMagick::Image.from_blob(blob)
     assert_equal 1, i.size
   end
-  
+
+  def test_multipage_with_blob
+    blob = nil
+    image_filename = File.join($base_dir, "multipage.tif")
+    File.open(image_filename, "rb") do |f|
+      blob = f.read
+    end
+    i = QuickMagick::Image.from_blob(blob)
+    assert_equal 2, i.size
+    
+    out1 = File.join($base_dir, "test1.jpg")
+    out2 = File.join($base_dir, "test2.jpg")
+    i.pop.save out1
+    i.pop.save out2
+    assert_equal 464, QuickMagick::Image.read(out1).first.width
+    assert_equal 100, QuickMagick::Image.read(out2).first.width
+  ensure
+    File.delete(out1) if out1 && File.exists?(out1)
+    File.delete(out2) if out2 && File.exists?(out2)
+  end
+
   def test_image_info
     i = QuickMagick::Image.read(@logo_filename).first
     assert_equal 640, i.width
