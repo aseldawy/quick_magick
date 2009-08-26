@@ -6,11 +6,12 @@ QuickMagick is a gem for easily accessing ImageMagick command line tools from Ru
 == When to use QuickMagick
 QuickMagick is a library that allows you to create and manipulate images.
 When you are faced with a problem that requires high quality manipulation of images you can use QuickMagick.
-These are some situation when QuickMagick will be useful for you:
-* Suppose you built an image gallery site that allows users to upload images. You can use QuickMagick to check uploaded images dimensions and make thumbnails for them.
-* Generate captchas to check whether the user is a robot or a human.
-* Generate graphical reports and charts to the user based on some calculations.
-* Convert uploaded images to a format usable by your application. For example, you can transform .pdf files to .jpg so that you can display them at your web site.
+Use QuickMagick to:
+* Check uploaded images dimensions.
+* Generate captchas.
+* Generate graphical reports and charts.
+* Convert uploaded images formats.
+* Display pdfs as images.
 
 == Features
 * Open an existing image from disk and determine basic info like width, height.
@@ -43,7 +44,7 @@ Another issue is that Flex can only open .jpg, .png and .gif files.
 The solution was to convert all images uploaded to one of these formats and resizing them down to at most 8192x8192.
 
 First, I used ImageMagick as a command line tool and was calling it using system calls.
-This accomplished the work perfectly buy my source code was a rubbish.
+This accomplished the work perfectly but my source code was a rubbish.
 It has many lines of code to handle creating temporary files and accessing multipage tiff and pdf files.
 I found RMagick at that time and decided to use it.
 It caused the code to be much simple without affecting performance notably.
