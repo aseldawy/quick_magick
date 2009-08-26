@@ -1,7 +1,7 @@
 = Quick Magick
 
 == What is QuickMagick
-QuickMagick is a gem for easily accessing ImageMagick command line tools from Ruby programs.
+QuickMagick is a gem built by BadrIT (http://www.badrit.com) for easily accessing ImageMagick command line tools from Ruby programs.
 
 == When to use QuickMagick
 QuickMagick is a library that allows you to create and manipulate images.
