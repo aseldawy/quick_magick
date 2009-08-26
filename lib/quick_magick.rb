@@ -49,7 +49,7 @@ module QuickMagick
   RadialGradient = "radial-gradient"
 
   # Different possible patterns
-  Patterns = %w{bricks checkboard circles crosshatch crosshatch30 crosshatch45 fishscales} +
+  Patterns = %w{bricks checkerboard circles crosshatch crosshatch30 crosshatch45 fishscales} +
     (0..20).collect {|level| "gray#{level}" } +
     %w{hexagons horizontal horizontalsaw hs_bdiagonal hs_cross hs_diagcross hs_fdiagonal hs_horizontal
     hs_vertical left30 left45 leftshingle octagons right30 right45 rightshingle smallfishscales
