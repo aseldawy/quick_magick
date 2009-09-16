@@ -56,7 +56,7 @@ module QuickMagick
     vertical verticalbricks verticalleftshingle verticalrightshingle verticalsaw}
   
   
-  class <<self
+  class << self
     # Generate a random string of specified length.
     # Used to generate random names for temp files
     def random_string(length=10)

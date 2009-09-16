@@ -3,7 +3,7 @@ require "tempfile"
 module QuickMagick
   
   class Image
-    class <<self
+    class << self
       
       # create an array of images from the given blob data
       def from_blob(blob, &proc)
@@ -392,6 +392,24 @@ module QuickMagick
 
     alias write! save!
     alias mogrify! save!
+    
+    def to_blob
+    	tmp_file = Tempfile.new(QuickMagick::random_string)
+    	if command_line =~ /-format\s(\S+)\s/
+    		# use format set up by user
+    		blob_format = $1
+    	elsif !@pseudo_image
+    		# use original image format
+    		blob_format = self.format
+    	else
+		  	# default format is jpg
+		  	blob_format = 'jpg'
+    	end
+    	save "#{blob_format}:#{tmp_file.path}"
+    	blob = nil
+    	File.open(tmp_file.path, 'rb') { |f| blob = f.read}
+    	blob
+    end
 
     # image file format
     def format

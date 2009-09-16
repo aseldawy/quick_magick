@@ -176,6 +176,9 @@ QuickMagick supports also ImageList s
 	i.draw_text(30, 30, "Hello world!", :rotate=>45)
 	i.save 'hello.jpg'
 
+... you can then convert it to blob using
+  i.to_blob
+
 For more information on drawing API visit:
 http://www.imagemagick.org/Usage/draw/
 

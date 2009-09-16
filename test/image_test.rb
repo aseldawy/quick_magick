@@ -228,6 +228,34 @@ class ImageTest < Test::Unit::TestCase
     File.delete(out_filename) if out_filename && File.exists?(out_filename)
   end
   
+  def test_to_blob_default_format
+    i = QuickMagick::Image.solid(100, 100)
+    i.draw_line(0,0,20,20)
+    i.draw_circle(30,30,20,20)
+    blob = i.to_blob
+    i2 = QuickMagick::Image.from_blob(blob).first
+    assert_equal 100, i2.width
+    assert_equal 100, i2.height
+    assert_equal 'JPEG', i2.format
+  end
+  
+  def test_to_blob_with_custom_format
+    i = QuickMagick::Image.solid(100, 100)
+    i.draw_line(0,0,20,20)
+    i.draw_circle(30,30,20,20)
+    i.format = 'gif'
+    blob = i.to_blob
+    i2 = QuickMagick::Image.from_blob(blob).first
+    assert_equal 'GIF', i2.format
+  end
+  
+  def test_to_blob_with_original_format
+    i = QuickMagick::Image.read(@logo_filename).first
+    blob = i.to_blob
+    i2 = QuickMagick::Image.from_blob(blob).first
+    assert_equal 'PNG', i2.format
+  end
+  
   def test_colors
     assert_equal "#00ff00ff", QuickMagick::rgb_color(0, 255, 0)
     assert_equal "#00007fff", QuickMagick::rgb_color(0, 0, 0.5)
@@ -252,6 +280,8 @@ class ImageTest < Test::Unit::TestCase
     i2 = QuickMagick::Image.read(out_filename).first
     assert_equal 640, i2.width
     assert_equal 480, i2.height
+  ensure
+	  File.delete out_filename if File.exists?(out_filename)
   end
   
   def test_image_converted_from_pseudo_to_normal
