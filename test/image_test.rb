@@ -22,6 +22,12 @@ class ImageTest < Test::Unit::TestCase
     assert_equal 1, i.size
   end
   
+  def test_skip_warnings
+  	filename = File.join($base_dir, "warnings.tiff")
+  	i = QuickMagick::Image.read(filename)
+  	assert_equal 1, i.size
+  end
+  
   def test_create_from_blob
     blob = nil
     File.open(@logo_filename, "rb") do |f|

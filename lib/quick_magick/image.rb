@@ -63,11 +63,19 @@ module QuickMagick
 
       # returns info for an image using <code>identify</code> command
       def identify(filename)
-        result = `identify #{filename} 2>&1`
+	    	error_file = Tempfile.new('identify_error')
+        result = `identify #{filename} 2>'#{error_file.path}'`
         unless $?.success?
-          raise QuickMagick::QuickMagickError, "Illegal file \"#{filename}\""
+		      error_message = <<-ERROR
+		        Error executing command: identify #{filename}
+		        Result is: #{result}
+		        Error is: #{error_file.read}
+		      ERROR
+          raise QuickMagick::QuickMagickError, error_message
         end
         result
+      ensure
+      	error_file.close
       end
 
     end
@@ -299,7 +307,8 @@ module QuickMagick
     # The polyline primitive requires three or more points to define their perimeters.
     # A polyline is simply a polygon in which the final point is not stroked to the start point.
     # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
-    #  points - A single array with each pair forming a coordinate in the form (x, y). e.g. [0,0,100,100,100,0] will draw a polyline between points (0,0)-(100,100)-(100,0)
+    #  points - A single array with each pair forming a coordinate in the form (x, y).
+    # e.g. [0,0,100,100,100,0] will draw a polyline between points (0,0)-(100,100)-(100,0)
     def draw_polyline(points, options={})
       append_to_operators("draw", "#{options_to_str(options)} polyline #{points_to_str(points)}")
     end
@@ -307,7 +316,8 @@ module QuickMagick
     # The polygon primitive requires three or more points to define their perimeters.
     # A polyline is simply a polygon in which the final point is not stroked to the start point.
     # When unfilled, this is a polygonal line. If the -stroke setting is none (the default), then a polyline is identical to a polygon.
-    #  points - A single array with each pair forming a coordinate in the form (x, y). e.g. [0,0,100,100,100,0] will draw a polygon between points (0,0)-(100,100)-(100,0)
+    #  points - A single array with each pair forming a coordinate in the form (x, y). 
+    # e.g. [0,0,100,100,100,0] will draw a polygon between points (0,0)-(100,100)-(100,0)
     def draw_polygon(points, options={})
       append_to_operators("draw", "#{options_to_str(options)} polygon #{points_to_str(points)}")
     end
@@ -353,7 +363,8 @@ module QuickMagick
     
     # saves the current image to the given filename
     def save(output_filename)
-      result = `convert #{command_line} "#{output_filename}" 2>&1`
+    	error_file = Tempfile.new('convert_error')
+      result = `convert #{command_line} '#{output_filename}' 2>'#{error_file.path}'`
       if $?.success?
       	if @pseudo_image
       		# since it's been saved, convert it to normal image (not pseudo)
@@ -365,9 +376,12 @@ module QuickMagick
         error_message = <<-ERROR
           Error executing command: convert #{command_line} "#{output_filename}"
           Result is: #{result}
+          Error is: #{error_file.read}
         ERROR
         raise QuickMagick::QuickMagickError, error_message
       end
+    ensure
+    	error_file.close
     end
     
     alias write save
@@ -376,7 +390,8 @@ module QuickMagick
     # saves the current image overwriting the original image file
     def save!
       raise QuickMagick::QuickMagickError, "Cannot mogrify a pseudo image" if @pseudo_image
-      result = `mogrify #{command_line}`
+     	error_file = Tempfile.new('mogrify_error')
+      result = `mogrify #{command_line} 2>'#{error_file.path}'`
       if $?.success?
         # remove all operations to avoid duplicate operations
         revert!
@@ -385,9 +400,12 @@ module QuickMagick
         error_message = <<-ERRORMSG
           Error executing command: mogrify #{command_line}
           Result is: #{result}
+          Error is: #{error_file.read}
         ERRORMSG
         raise QuickMagick::QuickMagickError, error_message
       end
+    ensure
+    	error_file.close if error_file
     end
 
     alias write! save!
