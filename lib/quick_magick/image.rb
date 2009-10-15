@@ -477,6 +477,26 @@ module QuickMagick
       File.size?(image_filename)
     end
     
+    # Reads a pixel from the image.
+    # WARNING: This is done through command line which is very slow.
+    # It is not recommended at all to use this method for image processing for example.
+    def get_pixel(x, y)
+    	error_file = Tempfile.new('identify_error')
+      result = `identify -verbose #{QuickMagick::c(image_filename+"[1x1+#{x}+#{y}]")} 2>'#{error_file.path}'`
+      unless $?.success?
+	      error_message = <<-ERROR
+	        Error executing command: identify #{image_filename}
+	        Result is: #{result}
+	        Error is: #{error_file.read}
+	      ERROR
+        raise QuickMagick::QuickMagickError, error_message
+      end
+      result =~ /Histogram:\s*\d+:\s*\(\s*(\d+),\s*(\d+),\s*(\d+)\)/
+      return [$1.to_i, $2.to_i, $3.to_i]
+    ensure
+    	error_file.close
+    end
+    
     # displays the current image as animated image
     def animate
       `animate #{command_line}`

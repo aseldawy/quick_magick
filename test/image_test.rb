@@ -312,4 +312,15 @@ class ImageTest < Test::Unit::TestCase
     i.antialias = true
     assert i.command_line =~ /\-antialias/
   end
+
+  def test_get_pixel
+  	image = QuickMagick::Image.read(@logo_filename)[0]
+  	assert_equal [2,90,164], image.get_pixel(356, 286)
+  end
+  
+  def test_get_pixel_with_multipage
+    image_filename = File.join($base_dir, "multipage.tif")
+  	image = QuickMagick::Image.read(image_filename)[1]
+  	assert_equal [234,43,44], image.get_pixel(256,73)
+  end
 end

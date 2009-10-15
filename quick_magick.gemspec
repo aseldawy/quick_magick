@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.date = %q{2009-10-25}
   s.description = %q{QuickMagick allows you to access ImageMagick command line functions using Ruby interface.}
   s.email = %q{ahmed.eldawy@badrit.com}
-  s.extra_rdoc_files = ["README", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "lib/quick_magick.rb"]
-  s.files = ["README", "Rakefile", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "lib/quick_magick.rb", "Manifest", "quick_magick.gemspec", "test/image_test.rb", "test/badfile.xxx", "test/multipage.tif", "test/image_list_test.rb", "test/test_magick.rb", "test/9.gif"]
+  s.extra_rdoc_files = ["README", "lib/quick_magick.rb", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb"]
+  s.files = ["Manifest", "README", "Rakefile", "lib/quick_magick.rb", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "test/9.gif", "test/badfile.xxx", "test/image_list_test.rb", "test/image_test.rb", "test/multipage.tif", "test/test_magick.rb", "test/warnings.tiff", "quick_magick.gemspec"]
   s.homepage = %q{http://quickmagick.rubyforge.org/}
   s.rdoc_options = ["--line-numbers", "--inline-source", "--title", "Quick_magick", "--main", "README"]
   s.require_paths = ["lib"]
