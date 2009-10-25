@@ -86,10 +86,15 @@ module QuickMagick
       @last_is_draw = false
       self
     end
+    
+    # append the given string as is. Used to append special arguments like +antialias or +debug
+    def append_basic(arg)
+      @arguments << arg << ' '
+    end
 
     # Image settings supported by ImageMagick
     IMAGE_SETTINGS_METHODS = %w{
-      adjoin affine alpha antialias authenticate attenuate background bias black-point-compensation
+      adjoin affine alpha authenticate attenuate background bias black-point-compensation
       blue-primary bordercolor caption channel colors colorspace comment compose compress define
       delay depth display dispose dither encoding endian family fill filter font format fuzz gravity
       green-primary intent interlace interpolate interword-spacing kerning label limit loop mask
@@ -140,7 +145,7 @@ module QuickMagick
 
     # methods that are called with (=)
     WITH_EQUAL_METHODS =
-      %w{alpha antialias background bias black-point-compensation blue-primary border bordercolor caption
+      %w{alpha background bias black-point-compensation blue-primary border bordercolor caption
         cahnnel colors colorspace comment compose compress depth density encoding endian family fill filter
         font format frame fuzz geometry gravity label mattecolor page pointsize quality stroke strokewidth
         undercolor units weight
@@ -149,10 +154,14 @@ module QuickMagick
     # methods that takes geometry options
     WITH_GEOMETRY_METHODS =
       %w{density page sampling-factor size tile-offset adaptive-blur adaptive-resize adaptive-sharpen
-        annotate blur border chop contrast-stretch extent extract floodfill frame gaussian-blur
+        annotate blur border chop contrast-stretch extent extract frame gaussian-blur
         geometry lat linear-stretch liquid-rescale motion-blur region repage resample resize roll
         sample scale selective-blur shadow sharpen shave shear sigmoidal-contrast sketch
         splice thumbnail unsharp vignette wave crop}
+   
+    # Methods that need special treatment. This array is used just to keep track of them.
+    SPECIAL_COMMANDS =
+      %w{floodfill antialias draw}
 
     IMAGE_SETTINGS_METHODS.each do |method|
       if WITH_EQUAL_METHODS.include?(method)
@@ -189,6 +198,11 @@ module QuickMagick
     # Fills a rectangle with a solid color
     def floodfill(width, height=nil, x=nil, y=nil, flag=nil, color=nil)
       append_to_operators "floodfill", QuickMagick::geometry(width, height, x, y, flag), color
+    end
+    
+    # Enables/Disables flood fill. Pass a boolean argument.
+    def antialias=(flag)
+    	append_basic flag ? '-antialias' : '+antialias'
     end
     
     # define attribute readers (getters)

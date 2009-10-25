@@ -302,4 +302,14 @@ class ImageTest < Test::Unit::TestCase
     # Now it's non pseudo
     i.save!
   end
+  
+  def test_antialias
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.antialias = false
+    assert i.command_line =~ /\+antialias/
+
+    i = QuickMagick::Image.solid(100, 100, :white)
+    i.antialias = true
+    assert i.command_line =~ /\-antialias/
+  end
 end

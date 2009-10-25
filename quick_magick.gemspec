@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{quick_magick}
-  s.version = "0.6.0"
+  s.version = "0.6.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ahmed ElDawy"]
-  s.date = %q{2009-09-16}
+  s.date = %q{2009-10-25}
   s.description = %q{QuickMagick allows you to access ImageMagick command line functions using Ruby interface.}
   s.email = %q{ahmed.eldawy@badrit.com}
   s.extra_rdoc_files = ["README", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "lib/quick_magick.rb"]
