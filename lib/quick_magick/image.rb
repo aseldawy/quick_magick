@@ -19,12 +19,8 @@ module QuickMagick
         info = identify(%Q<"#{filename}">)
         info_lines = info.split(/[\r\n]/)
         images = []
-        if info_lines.size == 1
-          images << Image.new(filename, info_lines.first)
-        else
-          info_lines.each_with_index do |info_line, i|
-            images << Image.new("#{filename}[#{i.to_s}]", info_line)
-          end
+        info_lines.each_with_index do |info_line, i|
+          images << Image.new("#{filename}", i, info_line)
         end
         images.each(&proc) if block_given?
         return images
@@ -38,7 +34,7 @@ module QuickMagick
         template_name = type + ":"
         template_name << color1.to_s if color1
         template_name << '-' << color2.to_s if color2
-        i = self.new(template_name, nil, true)
+        i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
         i
       end
@@ -47,7 +43,7 @@ module QuickMagick
       def solid(width, height, color=nil)
         template_name = QuickMagick::SolidColor+":"
         template_name << color.to_s if color
-        i = self.new(template_name, nil, true)
+        i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
         i
       end
@@ -56,7 +52,7 @@ module QuickMagick
       def pattern(width, height, pattern)
         raise QuickMagick::QuickMagickError, "Invalid pattern '#{pattern.to_s}'" unless QuickMagick::Patterns.include?(pattern.to_s)
         template_name = "pattern:#{pattern.to_s}"
-        i = self.new(template_name, nil, true)
+        i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
         i
       end
@@ -210,8 +206,9 @@ module QuickMagick
     alias original_filename image_filename
     
     # constructor
-    def initialize(filename, info_line=nil, pseudo_image=false)
+    def initialize(filename, index=0, info_line=nil, pseudo_image=false)
       @image_filename = filename
+      @index = index
       @pseudo_image = pseudo_image
       if info_line
         @image_infoline = info_line.split
@@ -222,7 +219,7 @@ module QuickMagick
     
     # The command line so far that will be used to convert or save the image
     def command_line
-      %Q< "(" #{@arguments} #{QuickMagick::c image_filename} ")" >
+      %Q< "(" #{@arguments} #{QuickMagick::c(image_filename + (@pseudo_image ? "" : "[#{@index}]"))} ")" >
     end
     
     # An information line about the image obtained using 'identify' command line
@@ -482,7 +479,7 @@ module QuickMagick
     # It is not recommended at all to use this method for image processing for example.
     def get_pixel(x, y)
     	error_file = Tempfile.new('identify_error')
-      result = `identify -verbose #{QuickMagick::c(image_filename+"[1x1+#{x}+#{y}]")} 2>'#{error_file.path}'`
+      result = `identify -verbose -crop #{QuickMagick::geometry(1,1,x,y)} #{QuickMagick::c(image_filename)}[#{@index}]  2>'#{error_file.path}'`
       unless $?.success?
 	      error_message = <<-ERROR
 	        Error executing command: identify #{image_filename}

@@ -66,7 +66,7 @@ Actually, I didn't need this feature, but I may need it in the future.
 
 At this point I decided to make my own gem and QuickMagick was born.
 I addressed the problems of MiniMagick while using the same main idea.
-First, QuickMagick doesn't write any temporary images to disk.
+First, QuickMagick doesn't write any temporary image files to disk.
 It doesn't issue any command line commands till the very end when you are saving the image.
 Second, I made an API similar to RMagick which allows for accessing multipage images.
 Third, I added API commands to create images from scratch and drawing simple primitives on images.
@@ -107,9 +107,9 @@ I couldn't test MiniMagick for this because it doesn't support an API for drawin
 
 == Conclusion
 QuickMagick is very easy to install, very easy to use and allows you to access most features of ImageMagick.
-RMagick is a bit faster and has an advantage of allowing you to access single pixels but it's a bit hard to install.
+RMagick is a bit faster but it's a bit hard to install.
 Also RMagick sometimes fail when it tries to handle large images.
-MiniMagick is proved to be a bit slower than QuickMagick with no advantage.
+MiniMagick is proved to be slower than QuickMagick with no advantage.
 So, it's better to use QuickMagick when your application is not image-centric.
 This means, you're not going to build an image manipulation tool or something like this.
 For normal operations like resize, rotate, generating captchas ... etc, QuickMagick will be a good friend of you.
@@ -161,7 +161,7 @@ QuickMagick supports also ImageList s
 	il.resize "300x300>"
 	il.save!
 
-(new) You can also create images from scratch
+You can also create images from scratch
 	# Create a 300x300 gradient image from yellow to red
 	i1 = QuickMagick::Image::gradient(300, 300, QuickMagick::RadialGradient, :yellow, :red)
 	i1.save 'gradient.png'
@@ -178,6 +178,15 @@ QuickMagick supports also ImageList s
 
 ... you can then convert it to blob using
   i.to_blob
+  
+(new) You can now access single pixels using QuickMagick
+	# Create a 300x300 gradient image from yellow to red
+	i1 = QuickMagick::Image::gradient(300, 300, QuickMagick::RadialGradient, :yellow, :red)
+	i1.save 'gradient.png'
+	
+	# Now you can access single pixel values
+	i1.get_pixel(10,10) # [255, 0, 0]
+	i1.get_pixel(50,50) # [255, 15, 0]
 
 For more information on drawing API visit:
 http://www.imagemagick.org/Usage/draw/
