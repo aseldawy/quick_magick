@@ -55,6 +55,10 @@ module QuickMagick
     hs_vertical left30 left45 leftshingle octagons right30 right45 rightshingle smallfishscales
     vertical verticalbricks verticalleftshingle verticalrightshingle verticalsaw}
   
+  %w{NorthWest North NorthEast West Center East SouthWest South SouthEast}.each do |gravity_type|
+      const_set gravity_type+"Gravity", gravity_type
+    end
+  
   
   class << self
     # Generate a random string of specified length.
