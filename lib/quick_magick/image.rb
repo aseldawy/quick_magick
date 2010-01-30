@@ -36,6 +36,7 @@ module QuickMagick
         template_name << '-' << color2.to_s if color2
         i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
+        yield(i) if block_given?
         i
       end
       
@@ -45,6 +46,7 @@ module QuickMagick
         template_name << color.to_s if color
         i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
+        yield(i) if block_given?
         i
       end
       
@@ -54,6 +56,7 @@ module QuickMagick
         template_name = "pattern:#{pattern.to_s}"
         i = self.new(template_name, 0, nil, true)
         i.size = QuickMagick::geometry(width, height)
+        yield(i) if block_given?
         i
       end
 

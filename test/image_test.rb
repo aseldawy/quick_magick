@@ -311,6 +311,9 @@ class ImageTest < Test::Unit::TestCase
     i = QuickMagick::Image.solid(100, 100, :white)
     i.antialias = true
     assert i.command_line =~ /\-antialias/
+    
+    i = QuickMagick::Image.solid(100, 100, :white) { |img| img.antialias = false}
+    assert i.command_line =~ /\+antialias/
   end
 
   def test_get_pixel
