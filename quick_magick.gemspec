@@ -2,21 +2,21 @@
 
 Gem::Specification.new do |s|
   s.name = %q{quick_magick}
-  s.version = "0.7.2"
+  s.version = "0.7.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ahmed ElDawy"]
-  s.date = %q{2010-01-30}
+  s.date = %q{2010-04-26}
   s.description = %q{QuickMagick allows you to access ImageMagick command line functions using Ruby interface.}
   s.email = %q{ahmed.eldawy@badrit.com}
   s.extra_rdoc_files = ["README.rdoc", "lib/quick_magick.rb", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb"]
-  s.files = ["Manifest", "README.rdoc", "Rakefile", "lib/quick_magick.rb", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "test/9.gif", "test/badfile.xxx", "test/image_list_test.rb", "test/image_test.rb", "test/multipage.tif", "test/test_magick.rb", "test/warnings.tiff", "quick_magick.gemspec"]
+  s.files = ["Manifest", "README.rdoc", "Rakefile", "lib/quick_magick.rb", "lib/quick_magick/image.rb", "lib/quick_magick/image_list.rb", "quick_magick.gemspec", "test/9.gif", "test/badfile.xxx", "test/image_list_test.rb", "test/image_test.rb", "test/multipage.tif", "test/test_magick.rb", "test/warnings.tiff"]
   s.homepage = %q{http://quickmagick.rubyforge.org/}
   s.rdoc_options = ["--line-numbers", "--inline-source", "--title", "Quick_magick", "--main", "README.rdoc"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{quickmagick}
-  s.rubygems_version = %q{1.3.5}
-  s.summary = %q{QuickMagick allows you to access ImageMagick command line functions using Ruby interface.}
+  s.rubygems_version = %q{1.3.6}
+  s.summary = %q{A gem build by BadrIT to access ImageMagick command line functions easily and quickly}
   s.test_files = ["test/image_test.rb", "test/image_list_test.rb", "test/test_magick.rb"]
 
   if s.respond_to? :specification_version then

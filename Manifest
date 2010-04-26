@@ -1,9 +1,10 @@
 Manifest
-README
+README.rdoc
 Rakefile
 lib/quick_magick.rb
 lib/quick_magick/image.rb
 lib/quick_magick/image_list.rb
+quick_magick.gemspec
 test/9.gif
 test/badfile.xxx
 test/image_list_test.rb

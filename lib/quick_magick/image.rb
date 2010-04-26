@@ -62,26 +62,14 @@ module QuickMagick
 
       # returns info for an image using <code>identify</code> command
       def identify(filename)
-	    	error_file = Tempfile.new('identify_error')
-        result = `identify #{filename} 2>'#{error_file.path}'`
-        unless $?.success?
-		      error_message = <<-ERROR
-		        Error executing command: identify #{filename}
-		        Result is: #{result}
-		        Error is: #{error_file.read}
-		      ERROR
-          raise QuickMagick::QuickMagickError, error_message
-        end
-        result
-      ensure
-      	error_file.close
+        QuickMagick.exec3 "identify #{QuickMagick.c filename}"
       end
 
     end
 
     # append the given option, value pair to the settings of the current image
     def append_to_settings(arg, value=nil)
-      @arguments << %Q<-#{arg} #{QuickMagick::c value} >
+      @arguments << "-#{arg} #{QuickMagick.c value} "
       @last_is_draw = false
       self
     end
@@ -110,7 +98,7 @@ module QuickMagick
       if @last_is_draw && is_draw
         @arguments.insert(@arguments.rindex('"'), " #{value}")
       else
-        @arguments << %Q<-#{arg} #{QuickMagick::c value} >
+        @arguments << %Q<-#{arg} #{QuickMagick.c value} >
       end
       @last_is_draw = is_draw
       self
@@ -222,7 +210,7 @@ module QuickMagick
     
     # The command line so far that will be used to convert or save the image
     def command_line
-      %Q< "(" #{@arguments} #{QuickMagick::c(image_filename + (@pseudo_image ? "" : "[#{@index}]"))} ")" >
+      %Q< "(" #{@arguments} #{QuickMagick.c(image_filename + (@pseudo_image ? "" : "[#{@index}]"))} ")" >
     end
     
     # An information line about the image obtained using 'identify' command line
@@ -377,25 +365,13 @@ module QuickMagick
     
     # saves the current image to the given filename
     def save(output_filename)
-    	error_file = Tempfile.new('convert_error')
-      result = `convert #{command_line} '#{output_filename}' 2>'#{error_file.path}'`
-      if $?.success?
-      	if @pseudo_image
-      		# since it's been saved, convert it to normal image (not pseudo)
-      		initialize(output_filename)
-		    	revert!
-      	end
-        return result 
-      else
-        error_message = <<-ERROR
-          Error executing command: convert #{command_line} "#{output_filename}"
-          Result is: #{result}
-          Error is: #{error_file.read}
-        ERROR
-        raise QuickMagick::QuickMagickError, error_message
-      end
-    ensure
-    	error_file.close
+      result = QuickMagick.exec3 "convert #{command_line} #{QuickMagick.c output_filename}" 
+    	if @pseudo_image
+    		# since it's been saved, convert it to normal image (not pseudo)
+    		initialize(output_filename)
+	    	revert!
+    	end
+      return result 
     end
     
     alias write save
@@ -404,22 +380,10 @@ module QuickMagick
     # saves the current image overwriting the original image file
     def save!
       raise QuickMagick::QuickMagickError, "Cannot mogrify a pseudo image" if @pseudo_image
-     	error_file = Tempfile.new('mogrify_error')
-      result = `mogrify #{command_line} 2>'#{error_file.path}'`
-      if $?.success?
-        # remove all operations to avoid duplicate operations
-        revert!
-        return result 
-      else
-        error_message = <<-ERRORMSG
-          Error executing command: mogrify #{command_line}
-          Result is: #{result}
-          Error is: #{error_file.read}
-        ERRORMSG
-        raise QuickMagick::QuickMagickError, error_message
-      end
-    ensure
-    	error_file.close if error_file
+      result = QuickMagick.exec3 "mogrify #{command_line}"
+      # remove all operations to avoid duplicate operations
+      revert!
+      return result 
     end
 
     alias write! save!
@@ -481,20 +445,9 @@ module QuickMagick
     # WARNING: This is done through command line which is very slow.
     # It is not recommended at all to use this method for image processing for example.
     def get_pixel(x, y)
-    	error_file = Tempfile.new('identify_error')
-      result = `identify -verbose -crop #{QuickMagick::geometry(1,1,x,y)} #{QuickMagick::c(image_filename)}[#{@index}]  2>'#{error_file.path}'`
-      unless $?.success?
-	      error_message = <<-ERROR
-	        Error executing command: identify #{image_filename}
-	        Result is: #{result}
-	        Error is: #{error_file.read}
-	      ERROR
-        raise QuickMagick::QuickMagickError, error_message
-      end
+      result = QuickMagick.exec3("identify -verbose -crop #{QuickMagick::geometry(1,1,x,y)} #{QuickMagick.c image_filename}[#{@index}]")
       result =~ /Histogram:\s*\d+:\s*\(\s*(\d+),\s*(\d+),\s*(\d+)\)/
       return [$1.to_i, $2.to_i, $3.to_i]
-    ensure
-    	error_file.close
     end
     
     # displays the current image as animated image

@@ -150,12 +150,31 @@ module QuickMagick
     
     alias hsl_color hsla_color
     
-    # Escapes possible special chracters in command line by surrounding it with double quotes
+    # Escapes possible special chracters in command line
+    # by surrounding it with double quotes
     def escape_commandline(str)
       str =~ /^(\w|\s|\.)*$/ ? str : "\"#{str}\""
     end
     
     alias c escape_commandline
+
+    # Execute a command line and returns its results when it suceeds
+    # When the command fails, it throws QuickMagick::QuickMagickError
+    def exec3(command)
+      error_file = Tempfile.new('error')
+      error_filepath = error_file.path
+      error_file.close
+      result = `#{command} 2>"#{error_filepath}"`
+      unless $?.success?
+        error_message = <<-ERROR
+          Error executing command: command
+          Result is: #{result}
+          Error is: #{File.read(error_filepath)}
+        ERROR
+        raise QuickMagick::QuickMagickError, error_message
+      end
+      result
+    end
   end
 end
 
