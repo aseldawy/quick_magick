@@ -26,7 +26,7 @@ Use QuickMagick to:
 First, you should install ImageMagick (http://www.imagemagick.org/) on your machine.
 Command line tools of ImageMagick must be in your system path.
 You can check this by running the command:
-  identify --version
+  identify -version
 Now to install QuickMagick just type at your command line:
   gem install quick_magick
 ... and it's done.
@@ -154,7 +154,7 @@ You can also display an image to Xserver
 	i.display
 
 QuickMagick supports also ImageList s
-	# Batch generate a list of jpg files to gif while resizing them
+	# Batch convert a list of jpg files to gif while resizing them
 	il = QuickMagick::ImageList.new('test.jpg', 'test2.jpg')
 	il << QuickMagick::Image.read('test3.jpg')
 	il.format = 'gif'

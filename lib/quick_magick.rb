@@ -5,7 +5,7 @@ end
 
 # check if ImageMagick is installed
 begin
-  x = `identify --version 2>&1`
+  x = `identify -version 2>&1`
   raise(QuickMagick::QuickMagickError, "ImageMagick not installed") unless x.index('ImageMagick') 
 rescue Errno::ENOENT
   # For Windows machines
