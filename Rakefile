@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake'
 require 'echoe'
  
-Echoe.new('quick_magick', '0.7.4') do |p|
+Echoe.new('quick_magick', '0.8.0') do |p|
   p.description    = "QuickMagick allows you to access ImageMagick command line functions using Ruby interface."
   p.summary        = "A gem build by BadrIT to access ImageMagick command line functions easily and quickly"
   p.url            = "http://quickmagick.rubyforge.org/"

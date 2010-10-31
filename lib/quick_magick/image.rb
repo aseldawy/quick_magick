@@ -16,11 +16,11 @@ module QuickMagick
       
       # create an array of images from the given file
       def read(filename, &proc)
-        info = identify(%Q<"#{filename}">)
+        info = identify(filename)
         info_lines = info.split(/[\r\n]/)
         images = []
         info_lines.each_with_index do |info_line, i|
-          images << Image.new("#{filename}", i, info_line)
+          images << Image.new(filename, i, info_line)
         end
         images.each(&proc) if block_given?
         return images
@@ -448,6 +448,38 @@ module QuickMagick
       result = QuickMagick.exec3("identify -verbose -crop #{QuickMagick::geometry(1,1,x,y)} #{QuickMagick.c image_filename}[#{@index}]")
       result =~ /Histogram:\s*\d+:\s*\(\s*(\d+),\s*(\d+),\s*(\d+)\)/
       return [$1.to_i, $2.to_i, $3.to_i]
+    end
+
+    # Returns details of the image as found by "identify -verbose" command
+    def details
+      str_details = QuickMagick.exec3("identify -verbose #{QuickMagick.c image_filename}[#@index]")
+      # This is something like breadcrumb for hashes visited at any time
+      hash_stack = []
+      # Current indentation. Used to infer nesting using indentation
+      current_indent = ""
+      # Last key inserted in the hash. Used to determine which key is the parent of a nested hash
+      last_key = nil
+      # Start with top level empty hash
+      hash_stack.push({})
+      str_details.each_line do |line|
+        key, value = line.split(":", 2)
+        key_indent = key[/^\s*/]
+        if key_indent.length < current_indent.length
+          # Must go one level up
+          hash_stack.pop
+        elsif key_indent.length > current_indent.length
+          # Must go one level deeper using last key
+          hash_stack.last[last_key] = {}
+          hash_stack.push hash_stack.last[last_key]
+        end
+        current_indent = key_indent
+
+        key = key.strip
+        value = value.strip
+        hash_stack.last[key] = value
+        last_key = key
+      end
+      hash_stack.first
     end
     
     # displays the current image as animated image

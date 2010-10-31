@@ -7,9 +7,9 @@ class ImageTest < Test::Unit::TestCase
   
   def setup
     @logo_filename = File.join($base_dir, "imagemagick-logo.png")
-    `convert magick:logo #{@logo_filename}`
+    `convert magick:logo "#{@logo_filename}"`
     @small_logo_filename = File.join($base_dir, "logo-small.jpg")
-    `convert magick:logo -resize 100x100! #{@small_logo_filename}`
+    `convert magick:logo -resize 100x100! "#{@small_logo_filename}"`
   end
   
   def teardown
@@ -325,5 +325,12 @@ class ImageTest < Test::Unit::TestCase
     image_filename = File.join($base_dir, "multipage.tif")
   	image = QuickMagick::Image.read(image_filename)[1]
   	assert_equal [234,43,44], image.get_pixel(256,73)
+  end
+
+  def test_details
+    image_details = QuickMagick::Image.read(@logo_filename)[0].details
+    assert_equal Hash, image_details.class
+    assert_equal ["Image"], image_details.keys
+    assert_equal "228.364 (0.895545)", image_details["Image"]["Channel statistics"]["Red"]["mean"]
   end
 end

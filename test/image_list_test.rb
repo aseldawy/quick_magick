@@ -1,15 +1,15 @@
 require 'test/unit'
 require 'quick_magick'
-require 'ftools'
+require 'fileutils'
 
 $base_dir = File.dirname(File.expand_path(__FILE__))
 
 class ImageTest < Test::Unit::TestCase
   def setup
     @logo_filename = File.join($base_dir, "imagemagick-logo.png")
-    `convert magick:logo #{@logo_filename}`
+    `convert magick:logo "#{@logo_filename}"`
     @small_logo_filename = File.join($base_dir, "logo-small.jpg")
-    `convert magick:logo -resize 100x100! #{@small_logo_filename}`
+    `convert magick:logo -resize 100x100! "#{@small_logo_filename}"`
   end
   
   def teardown

@@ -153,7 +153,7 @@ module QuickMagick
     # Escapes possible special chracters in command line
     # by surrounding it with double quotes
     def escape_commandline(str)
-      str =~ /^(\w|\s|\.)*$/ ? str : "\"#{str}\""
+      str =~ /^(\w|\.)*$/ ? str : "\"#{str}\""
     end
     
     alias c escape_commandline
